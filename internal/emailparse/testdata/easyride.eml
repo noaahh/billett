@@ -1,0 +1,60 @@
+From: SBB CFF FFS <noreply@order.info.sbb.ch>
+To: traveller@example.test
+Message-ID: <sanitized-easyride@example.test>
+Subject: EasyRide Kaufquittung - Ihre Fahrt vom 01.07.2026
+MIME-Version: 1.0
+Content-Type: multipart/alternative; boundary="billett-test-boundary"
+
+--billett-test-boundary
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+
++++ EasyRide Kaufquittung - Ihre Fahrt vom 01.07.2026
+
+Guten Tag Test Person
+
+Vielen Dank f=C3=BCr Ihre Reise mit EasyRide.
+
+Bestellnummer 100000000001
+
+Belastung
+Referenznummer 200000000001
+
+Zahlungsmittel
+Halbtax PLUS
+
+Datum
+02.07.2026
+
+Betrag
+CHF 25.50
+
+Ihre Fahrt vom 01.07.2026
+Reise von Zürich HB
+nach Bern
+Klasse 2. Klasse
+
+Verrechnete Billette
+Bestellnummer
+
+Artikel
+
+Einzelbillett
+Einfache Fahrt, Zürich HB - Bern
+Referenznummer 300000000001
+Artikelnummer 9211
+
+Tarif
+
+2. Klasse, Halbtax-Abo
+g=C3=BCltig: 01.07.2026 10:17 =E2=80=93 01.07.2026 11:15
+
+Preis
+
+CHF 25.50
+inkl. 8.1% MWST
+
+Total
+CHF 25.50
+
+--billett-test-boundary--

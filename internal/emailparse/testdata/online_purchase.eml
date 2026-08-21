@@ -1,0 +1,36 @@
+From: SBB <noreply@example.test>
+To: traveller@example.test
+Subject: Ihr Online-Kauf bei der SBB
+Message-ID: <sanitized-online-purchase@example.test>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
++++ Ihr Online-Kauf bei der SBB
+++ Abschnitt 1:
+Vielen Dank für Ihren Einkauf. Nachfolgend finden Sie Ihr(e) Billett(e):
+++ Abschnitt 2: Billett 1
+Example Passenger
+01.01.1990
+Streckenbillett
+Wilderswil
+Schynige Platte
+2. Klasse, einfache Fahrt, GA 2. Klasse
+CHF 17.00
+Gültig:
+01.08.2026 00:00 -
+02.08.2026 05:00
+Verkauft:
+01.08.2026 09:10:08
+Ticket-ID:
+1234567890
+Referenz-Nr.:
+9876543210
+Bestell-Nr.:
+2468013579
+Artikel-Nr.:
+125
+[Ende Abschnitt 2]
+++ Abschnitt 3:
+Wir wünschen Ihnen eine gute Reise.
+[Ende Ihr Online-Kauf bei der SBB]

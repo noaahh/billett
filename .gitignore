@@ -1,0 +1,5 @@
+/billett
+/data/
+/.env
+/deploy/cloudflare-email-worker/.wrangler/
+/deploy/cloudflare-email-worker/wrangler.toml

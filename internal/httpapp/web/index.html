@@ -1,0 +1,212 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#17242b">
+  <title>billett</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' fill='%23df3f32'/%3E%3Cpath d='M3 11 L8 5 L13 11' stroke='white' stroke-width='2' fill='none'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="anonymous">
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body class="is-loading">
+  <a class="skip-link" href="#main-content">Skip to journey overview</a>
+
+  <header class="topbar">
+    <div class="brand">billett</div>
+
+    <div class="period-controls" role="group" aria-label="Dashboard period">
+      <select id="period-year" aria-label="Year"></select>
+      <select id="period-month" aria-label="Month"></select>
+      <button id="clear-period" class="ghost-button" type="button">All time</button>
+    </div>
+
+    <form id="upload-form" class="import-form">
+      <label id="file-label" class="file-button" title="Choose an SBB email receipt">
+        <span>Choose receipt</span>
+        <input id="email-file" name="email" type="file" accept=".eml,message/rfc822" required>
+      </label>
+      <button id="import-button" class="primary-button" type="submit">
+        <span>Import</span>
+      </button>
+    </form>
+  </header>
+
+  <div id="status" class="status-toast" role="status" aria-live="polite"></div>
+
+  <main id="main-content">
+    <section class="stats" aria-label="Summary">
+      <h1 class="stats-period"><span id="period-label">All time</span></h1>
+      <dl class="stats-strip">
+        <div>
+          <dt>Ticket spend</dt>
+          <dd><output id="total-spend">CHF 0.00</output></dd>
+          <small id="spend-context">All imported tickets</small>
+        </div>
+        <div>
+          <dt>Journeys</dt>
+          <dd><output id="journey-count">0</output></dd>
+        </div>
+        <div>
+          <dt>Distance</dt>
+          <dd><output id="distance-total">0 km</output></dd>
+        </div>
+        <div>
+          <dt>Avg ticket</dt>
+          <dd><output id="average-ticket">CHF 0.00</output></dd>
+        </div>
+        <div>
+          <dt>Mapped</dt>
+          <dd><output id="route-coverage">0%</output></dd>
+        </div>
+        <div class="processing-metric">
+          <dt><span class="state-dot" aria-hidden="true"></span>Processing</dt>
+          <dd><output id="matching-count">0</output></dd>
+        </div>
+      </dl>
+    </section>
+
+    <section class="workspace">
+      <section class="map-panel" aria-label="Travel map">
+        <div class="map-shell">
+          <div id="map" aria-label="Map of reconstructed public transport journeys"></div>
+          <button id="map-reset" class="map-chip" type="button" hidden>Show all routes</button>
+          <div class="heat-legend" aria-label="Route frequency legend">
+            <span>Single</span>
+            <i aria-hidden="true"></i>
+            <span>Frequent</span>
+          </div>
+          <div id="selected-route" class="selected-route" hidden></div>
+        </div>
+
+        <div id="matching-panel" class="matching-panel" hidden>
+          <div class="matching-panel-heading">
+            <span class="activity-pulse" aria-hidden="true"></span>
+            <strong>Reconstructing routes</strong>
+            <output id="active-route-count">0</output>
+          </div>
+          <div id="matching-jobs" class="matching-jobs"></div>
+        </div>
+      </section>
+
+      <aside class="charts" aria-label="Journey analytics">
+        <article class="chart-block">
+          <header>
+            <h2>Spend by month</h2>
+            <output id="highest-month">No spend yet</output>
+          </header>
+          <div id="spend-chart" class="spend-chart" aria-label="Monthly ticket spend chart"></div>
+        </article>
+        <article class="chart-block">
+          <header>
+            <h2>Distance by mode</h2>
+            <output id="travel-time">0 h tracked</output>
+          </header>
+          <div id="mode-chart" class="mode-chart">
+            <p id="mode-empty" class="mode-empty">Appears once routes are reconstructed.</p>
+          </div>
+        </article>
+      </aside>
+    </section>
+
+    <section class="ledger" aria-labelledby="journeys-title">
+      <header class="ledger-heading">
+        <h2 id="journeys-title">Journeys</h2>
+        <p><span id="ledger-result-count">0 shown</span> · <span id="matched-count">0</span> mapped · <span id="unmatched-count">0</span> awaiting a route</p>
+      </header>
+
+      <form id="ledger-filters" class="ledger-filters" role="search">
+        <input id="ledger-search" class="search-field" type="search" placeholder="Search routes, tickets, dates…  ( / )" aria-label="Find a journey" autocomplete="off">
+        <select id="ledger-status" aria-label="Route status">
+          <option value="all">All statuses</option>
+          <option value="mapped">Mapped</option>
+          <option value="processing">Processing</option>
+          <option value="failed">Failed</option>
+          <option value="unmapped">Not mapped</option>
+        </select>
+        <select id="ledger-mode" aria-label="Transport mode">
+          <option value="all">All modes</option>
+          <option value="rail">Rail</option>
+          <option value="bus">Bus</option>
+          <option value="tram">Tram</option>
+          <option value="other">Other</option>
+        </select>
+        <select id="ledger-sort" aria-label="Sort by">
+          <option value="date">By date</option>
+          <option value="route">By route</option>
+          <option value="movement">By movement</option>
+          <option value="ticket">By ticket</option>
+          <option value="cost">By cost</option>
+          <option value="status">By status</option>
+        </select>
+        <button id="ledger-direction" class="sort-direction" type="button" aria-label="Change to ascending order" title="Change to ascending order">
+          <span aria-hidden="true">↓</span>
+        </button>
+        <button id="clear-ledger-filters" class="ghost-button" type="button" disabled>Clear</button>
+      </form>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th data-sort-key="date" aria-sort="descending"><button class="sort-button" type="button" data-sort-key="date">Date <span aria-hidden="true">↓</span></button></th>
+              <th data-sort-key="route" aria-sort="none"><button class="sort-button" type="button" data-sort-key="route">Route <span aria-hidden="true">↕</span></button></th>
+              <th data-sort-key="movement" aria-sort="none"><button class="sort-button" type="button" data-sort-key="movement">Movement <span aria-hidden="true">↕</span></button></th>
+              <th data-sort-key="ticket" aria-sort="none"><button class="sort-button" type="button" data-sort-key="ticket">Ticket <span aria-hidden="true">↕</span></button></th>
+              <th class="number-column" data-sort-key="cost" aria-sort="none"><button class="sort-button" type="button" data-sort-key="cost">Cost <span aria-hidden="true">↕</span></button></th>
+              <th data-sort-key="status" aria-sort="none"><button class="sort-button" type="button" data-sort-key="status">Status <span aria-hidden="true">↕</span></button></th>
+            </tr>
+          </thead>
+          <tbody id="journeys"></tbody>
+        </table>
+      </div>
+      <div id="empty-state" class="empty-state" hidden>
+        <h3 id="empty-title">No journeys in this view</h3>
+        <p id="empty-message">Import a supported SBB receipt or choose another period.</p>
+        <button id="empty-reset" class="ghost-button" type="button" hidden>Clear filters</button>
+      </div>
+    </section>
+  </main>
+
+  <dialog id="journey-dialog" class="journey-dialog">
+    <form id="journey-form" method="dialog">
+      <header>
+        <h2>Journey details</h2>
+        <button id="journey-dialog-close" class="dialog-close" type="button" aria-label="Close">×</button>
+      </header>
+      <input id="journey-id" type="hidden">
+      <div class="journey-form-grid">
+        <label><span>Date</span><input id="journey-date" type="date" required></label>
+        <label><span>Occurrence</span><select id="journey-occurrence"><option value="confirmed">Confirmed</option><option value="unconfirmed">Unconfirmed</option><option value="excluded">Did not travel</option></select></label>
+        <label><span>Origin</span><input id="journey-origin" required></label>
+        <label><span>Destination</span><input id="journey-destination" required></label>
+        <label><span>From</span><input id="journey-valid-from" type="datetime-local" required></label>
+        <label><span>To</span><input id="journey-valid-to" type="datetime-local" required></label>
+        <label><span>Time source</span><select id="journey-time-source"><option value="recorded">Recorded by receipt</option><option value="user_supplied">Confirmed by me</option><option value="validity_window">Ticket validity only</option><option value="timetable_estimate">Timetable estimate</option></select></label>
+        <label class="notes-field"><span>Notes</span><textarea id="journey-notes" maxlength="2000"></textarea></label>
+      </div>
+      <p class="dialog-notice">Changing route or time details queues a new route reconstruction. Ticket validity alone is not counted as tracked travel time.</p>
+      <footer>
+        <button id="journey-delete" class="danger-button" type="button">Delete</button>
+        <div>
+          <button id="journey-cancel" class="ghost-button" type="button">Cancel</button>
+          <button class="primary-button" type="submit">Save changes</button>
+        </div>
+      </footer>
+    </form>
+  </dialog>
+
+  <footer>
+    <span>Journey data stored locally in SQLite</span>
+    <span class="ingest-line">
+      Browser upload ready
+      · Email API <span id="inbound-api-status" data-state="checking">checking…</span>
+      · <span id="ingestion-audit-status" data-state="checking">checking imports…</span>
+      · <a href="https://github.com/noaahh/billett#automatic-email-delivery" target="_blank" rel="noreferrer">Setup docs</a>
+    </span>
+  </footer>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin="anonymous"></script>
+  <script src="/app.js"></script>
+</body>
+</html>

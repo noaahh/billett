@@ -1,0 +1,57 @@
+services:
+  billett:
+    image: ghcr.io/noaahh/billett:${BILLETT_VERSION:-latest}
+    pull_policy: missing
+    build: .
+    ports:
+      - "127.0.0.1:8080:8080"
+    environment:
+      BILLETT_AUTH_USERNAME: ${BILLETT_AUTH_USERNAME:?set BILLETT_AUTH_USERNAME in .env}
+      BILLETT_AUTH_PASSWORD: ${BILLETT_AUTH_PASSWORD:?set BILLETT_AUTH_PASSWORD in .env}
+      BILLETT_RAW_ARCHIVE_DIR: ${BILLETT_RAW_ARCHIVE_DIR:-}
+      INBOUND_TOKEN: ${INBOUND_TOKEN:-}
+      GEOPS_API_KEY: ${GEOPS_API_KEY:-}
+      OSRM_URL: ${OSRM_URL:-https://router.project-osrm.org}
+      OVERPASS_URL: ${OVERPASS_URL:-https://overpass.osm.ch/api/interpreter}
+    volumes:
+      - billett-data:/data
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/api/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m,mode=1777
+    security_opt:
+      - no-new-privileges:true
+    stop_grace_period: 20s
+    restart: unless-stopped
+
+  caddy:
+    image: caddy:2.10.2-alpine
+    profiles: ["public"]
+    depends_on:
+      billett:
+        condition: service_healthy
+    environment:
+      BILLETT_DOMAIN: ${BILLETT_DOMAIN:-journeys.example.com}
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    read_only: true
+    tmpfs:
+      - /tmp:size=32m,mode=1777
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+
+volumes:
+  billett-data:
+  caddy-data:
+  caddy-config:

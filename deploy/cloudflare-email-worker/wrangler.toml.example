@@ -1,0 +1,9 @@
+name = "billett-email-ingest"
+main = "src/index.js"
+compatibility_date = "2026-08-07"
+
+[vars]
+BILLETT_INBOUND_URL = "https://ingest.example.com/api/inbound-email"
+ALLOWED_TO = "journeys@example.com"
+ALLOWED_FROM_DOMAINS = "sbb.ch"
+FALLBACK_FORWARD_TO = ""
